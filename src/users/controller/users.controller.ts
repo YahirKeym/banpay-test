@@ -6,6 +6,7 @@ import {
 	Param,
 	Post,
 	Put,
+	Query,
 } from '@nestjs/common';
 import {
 	CONTROLLER_PATHS,
@@ -22,38 +23,42 @@ export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
 	@Get()
-	async getUsers() {
-		return this.usersService.getUsers();
+	async getUsers(@Query('token') token: string) {
+		return this.usersService.getUsers(token);
 	}
 
 	@Get(':id')
-	async getUser(@Param('id') id: string) {
-		return this.usersService.getUser(id);
+	async getUser(@Param('id') id: string, @Query('token') token: string) {
+		return this.usersService.getUser(id, token);
 	}
 
 	@Post()
-	async createUser(@Body() user: User) {
-		return this.usersService.createUser(user);
+	async createUser(@Body() user: User, @Query('token') token: string) {
+		return this.usersService.createUser(user, token);
 	}
 
 	@Put(':id')
-	async updateUser(@Param('id') id: string, @Body() user: User) {
-		return this.usersService.updateUser(id, user);
+	async updateUser(
+		@Param('id') id: string,
+		@Body() user: User,
+		@Query('token') token: string,
+	) {
+		return this.usersService.updateUser(id, user, token);
 	}
 
 	@Delete(':id')
-	async deleteUser(@Param('id') id: string) {
-		return this.usersService.deleteUser(id);
+	async deleteUser(@Param('id') id: string, @Query('token') token: string) {
+		return this.usersService.deleteUser(id, token);
 	}
 
 	@Delete()
-	async deleteUsers() {
-		return this.usersService.deleteUsers();
+	async deleteUsers(@Query('token') token: string) {
+		return this.usersService.deleteUsers(token);
 	}
 
 	@Post('/recovery')
-	async recoveryUsers() {
-		return this.usersService.recoveryUsers();
+	async recoveryUsers(@Query('token') token: string) {
+		return this.usersService.recoveryUsers(token);
 	}
 
 	@Post('/login')

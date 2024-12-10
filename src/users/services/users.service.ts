@@ -21,7 +21,8 @@ export class UsersService {
 		this.users = users;
 	}
 
-	async getUsers() {
+	async getUsers(token: string) {
+		await this.loginByRole('admin', token);
 		const users = this.users.filter((user) => !user.isDeleted);
 		return {
 			users: users,
@@ -30,9 +31,10 @@ export class UsersService {
 		};
 	}
 
-	async getUser(id: string) {
-		const user = this.users.find((user) => user.id === id);
-		if (!user) {
+	async getUser(id: string, token: string) {
+		await this.loginByRole('admin', token);
+		const userData = this.users.find((user) => user.id === id);
+		if (!userData) {
 			throw new BadRequestException({
 				message: 'User not found',
 				code: 'USER_NOT_FOUND',
@@ -40,13 +42,15 @@ export class UsersService {
 			});
 		}
 		return {
-			user: user,
+			user: userData,
 			code: 'USER_FETCHED',
 			statusCode: 200,
 		};
 	}
 
-	async createUser(user: CreateUserDto) {
+	async createUser(user: CreateUserDto, token: string) {
+		console.log(user, token);
+		await this.loginByRole('admin', token);
 		if (this.users.find((userData) => userData.email === user.email)) {
 			throw new BadRequestException({
 				message: 'User already exists',
@@ -80,7 +84,8 @@ export class UsersService {
 		};
 	}
 
-	async updateUser(id: string, user: CreateUserDto) {
+	async updateUser(id: string, user: CreateUserDto, token: string) {
+		await this.loginByRole('admin', token);
 		const userIndex = this.users.findIndex(
 			(userData) => userData.id === id && !userData.isDeleted,
 		);
@@ -117,7 +122,8 @@ export class UsersService {
 		};
 	}
 
-	async deleteUser(id: string) {
+	async deleteUser(id: string, token: string) {
+		await this.loginByRole('admin', token);
 		const userIndex = this.users.findIndex(
 			(userData) => userData.id === id && !userData.isDeleted,
 		);
@@ -136,7 +142,8 @@ export class UsersService {
 		};
 	}
 
-	async deleteUsers() {
+	async deleteUsers(token: string) {
+		await this.loginByRole('admin', token);
 		this.users.forEach((user) => {
 			if (!user.isDeleted) {
 				user.isDeleted = true;
@@ -149,7 +156,8 @@ export class UsersService {
 		};
 	}
 
-	async recoveryUsers() {
+	async recoveryUsers(token: string) {
+		await this.loginByRole('admin', token);
 		this.users.forEach((user) => {
 			user.isDeleted = false;
 		});
@@ -160,7 +168,8 @@ export class UsersService {
 		};
 	}
 
-	public async reactivateUser(id: string) {
+	public async reactivateUser(id: string, token: string) {
+		await this.loginByRole('admin', token);
 		const userIndex = this.users.findIndex(
 			(user) => user.id === id && user.isDeleted,
 		);
@@ -181,6 +190,7 @@ export class UsersService {
 
 	public async loginByToken(token: string) {
 		const userData = this.users.find((user) => user.token === token);
+		console.log(userData);
 		if (!userData) {
 			throw new BadRequestException({
 				message: 'User not found',
@@ -204,6 +214,26 @@ export class UsersService {
 			throw new BadRequestException({
 				message: 'Invalid password',
 				code: 'INVALID_PASSWORD',
+				statusCode: 400,
+			});
+		}
+		return userData;
+	}
+
+	public async loginByRole(role: string, token: string) {
+		const userData = this.users.find((user) => user.token === token);
+		console.log(userData);
+		if (!userData) {
+			throw new BadRequestException({
+				message: 'User not found',
+				code: 'USER_NOT_FOUND',
+				statusCode: 400,
+			});
+		}
+		if (userData.role !== role) {
+			throw new BadRequestException({
+				message: 'User not permitted',
+				code: 'USER_NOT_PERMITTED',
 				statusCode: 400,
 			});
 		}
